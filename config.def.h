@@ -3,6 +3,7 @@
 
 /* appearance */
 static const unsigned int borderpx = 3;		  /* border pixel of windows */
+static const unsigned int gappx = 6;          /* gaps between windows */
 static const unsigned int snap = 32;		  /* snap pixel */
 static const unsigned int startmenusize = 30;		  /* snap pixel */
 static const unsigned int systraypinning = 0; /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
@@ -342,6 +343,9 @@ static Key keys[] = {
 	{MODKEY,                                XK_d,               incnmaster,           {.i = -1}},
 	{MODKEY,                                XK_h,               setmfact,             {.f = -0.05}},
 	{MODKEY,                                XK_l,               setmfact,             {.f = +0.05}},
+	{ MODKEY|ShiftMask,             XK_h,      setcfact,       {.f = +0.25} },
+	{ MODKEY|ShiftMask,             XK_l,      setcfact,       {.f = -0.25} },
+	{ MODKEY|ShiftMask,             XK_o,      setcfact,       {.f =  0.00} },
 	{MODKEY|ShiftMask,                      XK_Return,          zoom,                 {0}},
 	{MODKEY,                                XK_Tab,             lastview,             {0}},
 	{MODKEY|ShiftMask,                      XK_Tab,             focuslastclient,      {0}},
@@ -396,7 +400,10 @@ static Key keys[] = {
 	{MODKEY|ShiftMask,                      XK_comma,           tagmon,               {.i = -1}},
 	{MODKEY|ShiftMask,                      XK_period,          tagmon,               {.i = +1}},
 	{MODKEY|Mod1Mask,                       XK_comma,           followmon,            {.i = -1}},
-	{MODKEY|Mod1Mask,                       XK_period,                       followmon,  {.i = +1}},
+	{MODKEY|Mod1Mask,                       XK_period,          followmon,            {.i = +1}},
+	{ MODKEY,                               XK_minus,           setgaps,              {.i = -1 } },
+	{ MODKEY,                               XK_equal,           setgaps,              {.i = +1 } },
+	{ MODKEY|ShiftMask,                     XK_equal,           setgaps,              {.i = 0  } },
 
 	{MODKEY|ShiftMask|ControlMask|Mod1Mask, XK_period,                       desktopset, {0}},
 	TAGKEYS(XK_1, 0)
