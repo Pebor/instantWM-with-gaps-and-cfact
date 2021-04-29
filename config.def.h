@@ -21,6 +21,7 @@ static char xresourcesfont[30];
 static char col_background[] = "#292f3a"; /* top bar dark background*/
 // fonts
 static char col_white[] = "#ffffff";/*white for fonts*/
+static char col_gray[] = "#747c90"; /*top bar minimized foreground*/
 
 // border active and inactive
 static char col_pastel_blue[] = "#747c90";/*unsaturated for focused border*/
@@ -58,7 +59,7 @@ static const char *colors[][4] = {
 	/*                    fg               bg              border 	           float*/
 	[SchemeNorm]      = { col_white,       col_background, col_pastel_blue,    col_green },
 	[SchemeSel]       = { col_white,       col_blue,       col_light_blue,     col_green },
-	[SchemeHid]       = { col_pastel_blue, col_background, col_pastel_blue,    col_green },
+	[SchemeHid]       = { col_gray,        col_background, col_pastel_blue,    col_green },
 	[SchemeTags]      = { col_white,       col_blue,       col_light_blue,     col_dark_blue },
 	[SchemeActive]    = { col_white,       col_green,      col_light_blue,     col_dark_green },
 	[SchemeAddActive] = { col_white,       col_orange,     col_light_blue,     col_dark_orange },
@@ -130,7 +131,8 @@ static const Layout layouts[] = {
 		{MODKEY|ControlMask, KEY, toggleview, {.ui = 1 << TAG}}, \
 		{MODKEY|ShiftMask, KEY, tag, {.ui = 1 << TAG}},          \
 		{MODKEY|Mod1Mask, KEY, followtag, {.ui = 1 << TAG}},          \
-		{MODKEY|ControlMask|ShiftMask, KEY, toggletag, {.ui = 1 << TAG}},
+		{MODKEY|ControlMask|ShiftMask, KEY, toggletag, {.ui = 1 << TAG}}, \
+		{MODKEY|Mod1Mask|ShiftMask, KEY, swaptags, {.ui = 1 << TAG}},
 
 
 #define SHCMD(cmd)                                           \
@@ -166,7 +168,7 @@ static const char *onboardcmd[] = {"onboard", NULL};
 static const char *instantshutdowncmd[] = {"instantshutdown", NULL};
 static const char *systemmonitorcmd[] = {".config/instantos/default/systemmonitor", NULL};
 static const char *notifycmd[] = {"instantnotify", NULL};
-static const char *rangercmd[] = { ".config/instantos/default/terminal", "-e", "ranger", NULL };
+static const char *rangercmd[] = { ".config/instantos/default/termfilemanager", NULL };
 static const char *panther[] = { ".config/instantos/default/appmenu", NULL};
 static const char *controlcentercmd[] = { "instantsettings", NULL};
 static const char *displaycmd[] = { "instantdisper", NULL};
@@ -201,6 +203,7 @@ ResourcePref resources[] = {
 
 		{ "minimize",         STRING,  &col_orange },
 		{ "darkminimize",     STRING,  &col_dark_orange },
+		{ "minimizedcolor",   STRING,  &col_gray },
 
 		{ "border",           STRING,  &col_pastel_blue },
 		{ "activeborder",     STRING,  &col_light_blue },
@@ -225,18 +228,21 @@ ResourcePref resources[] = {
 
 static Xcommand commands[] = {
 	/* signum       function        default argument  arg handler*/
-    // 0 means off, 1 means toggle, 2 means on
+	// 0 means off, 1 means toggle, 2 means on
 	{ "overlay",                setoverlay,                   {0},         0 },
 	{ "tag",                    view,                         { .ui = 2 }, 3 },
 	{ "animated",               toggleanimated,               { .ui = 2 }, 1 },
-    { "focusfollowsmouse",      togglefocusfollowsmouse,      { .ui = 2 }, 1 },
-    { "focusfollowsfloatmouse", togglefocusfollowsfloatmouse, { .ui = 2 }, 1 },
+	{ "focusfollowsmouse",      togglefocusfollowsmouse,      { .ui = 2 }, 1 },
+	{ "focusfollowsfloatmouse", togglefocusfollowsfloatmouse, { .ui = 2 }, 1 },
 	{ "alttab",                 alttabfree,                   { .ui = 2 }, 1 },
 	{ "layout",                 commandlayout,                { .ui = 0 }, 1 },
 	{ "prefix",                 commandprefix,                { .ui = 1 }, 1 },
 	{ "alttag",                 togglealttag,                 { .ui = 0 }, 1 },
 	{ "hidetags",               toggleshowtags,               { .ui = 0 }, 1 },
 	{ "specialnext",            setspecialnext,               { .ui = 0 }, 3 },
+	{ "tagmon",                 tagmon,                       { .i = +1 }, 0 },
+	{ "followmon",              followmon,                    { .i = +1 }, 0 },
+	{ "focusmon",               focusmon,                     { .i = +1 }, 0 },
 };
 
 static Key dkeys[] = {
