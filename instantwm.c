@@ -830,14 +830,26 @@ arrange(Monitor *m)
 void
 arrangemon(Monitor *m)
 {
+
+    Client *c;
+    m->clientcount = clientcountmon(m);
+
+    for(c = nexttiled(m->clients); c; c = nexttiled(c->next)) {
+        if (!c->isfloating && !c->isfullscreen && 
+                ((c->mon->clientcount == 1 && NULL != c->mon->lt[c->mon->sellt]->arrange) || &monocle == c->mon->lt[c->mon->sellt]->arrange)) {
+            savebw(c);
+            c->bw = 0;
+        } else {
+            restorebw(c);
+        }
+    }
+
     strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
     if (m->lt[m->sellt]->arrange)
         m->lt[m->sellt]->arrange(m);
     else
         floatl(m);
 
-    if (m == selmon)
-        selmon->clientcount = clientcount();
     if (m->fullscreen) {
     int tbw;
         tbw = selmon->fullscreen->bw;
@@ -3549,14 +3561,6 @@ resizeclient(Client *c, int x, int y, int w, int h)
 	c->oldh = c->h; c->h = wc.height = h;
 	wc.border_width = c->bw;
 
-	if ((!c->isfullscreen && !c->isfloating) &&
-	((nexttiled(c->mon->clients) == c && !nexttiled(c->next) && NULL != c->mon->lt[c->mon->sellt]->arrange) ||
-	&monocle == c->mon->lt[c->mon->sellt]->arrange)) {
-		c->w = wc.width += c->bw * 2;
-		c->h = wc.height += c->bw * 2;
-		wc.border_width = 0;
-	}
-
 	XConfigureWindow(dpy, c->win, CWX|CWY|CWWidth|CWHeight|CWBorderWidth, &wc);
 	configure(c);
 	XSync(dpy, False);
@@ -4829,10 +4833,10 @@ moveresize(const Arg *arg) {
 		ny = selmon->my;
 
 	if ((ny + c->h) > (selmon->my + selmon->mh))
-		ny = ((selmon->mh + selmon->my) - c->h);
+		ny = ((selmon->mh + selmon->my) - c->h - c->bw * 2);
 
 	if ((nx + c->w) > (selmon->mx + selmon->mw))
-		nx = ((selmon->mw + selmon->mx) - c->w);
+		nx = ((selmon->mw + selmon->mx) - c->w - c->bw * 2);
 
 	animateclient(c, nx, ny, c->w, c->h, 5, 0);
 	warp(c);
@@ -4976,14 +4980,13 @@ togglefloating(const Arg *arg)
 		return;
 	selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
 	if (selmon->sel->isfloating) {
-		/* restore last known float dimensions */
+        restorebw(selmon->sel);
 		XSetWindowBorder(dpy, selmon->sel->win, scheme[SchemeSel][ColFloat].pixel);
-        if (selmon->sel->bw == 0)
-            selmon->sel->bw = selmon->sel->oldbw;
 		animateclient(selmon->sel, selmon->sel->sfx, selmon->sel->sfy,
 		       selmon->sel->sfw, selmon->sel->sfh, 7, 0);
 	} else {
-        if (clientcount() == 1 && !selmon->sel->snapstatus) {
+        selmon->clientcount = clientcount();
+        if (selmon->clientcount <= 1 && !selmon->sel->snapstatus) {
             savebw(selmon->sel);
             selmon->sel->bw = 0;
         }
