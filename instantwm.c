@@ -435,11 +435,24 @@ void checkanimate(Client *c, int x, int y, int w, int h, int frames, int resetpo
 // move client to position within a set amount of frames
 void animateclient(Client *c, int x, int y, int w, int h, int frames, int resetpos)
 {
-	int time;
-	int oldx, oldy;
 	int width, height;
 	width = w ? w : c->w;
 	height = h ? h : c->h;
+
+	// halve frames if enough events are queried
+	frames = frames / 1 + (XEventsQueued(dpy, QueuedAlready) > 50);
+
+	// No animation if even more events are queried
+    if (!frames || XEventsQueued(dpy, QueuedAlready) > 100) {
+        if (resetpos)
+            resize(c, c->x, c->y, width, height, 0);
+        else
+            resize(c, x, y, width, height, 1);
+        return;
+    }
+
+	int time;
+	int oldx, oldy;
 
 	// prevent oversizing when minimizing/unminimizing
 	if (width > c->mon->mw - (2 * c->bw))
@@ -2465,7 +2478,7 @@ motionnotify(XEvent *e)
 	}
 
 	// toggle overlay gesture
-	if (ev->y_root == 0 && ev->x_root >= selmon->mx + selmon->ww - 20 - getsystraywidth()) {
+	if (ev->y_root == selmon->my && ev->x_root >= selmon->mx + selmon->ww - 20 - getsystraywidth()) {
 		if (selmon->gesture != 11) {
 			selmon->gesture = 11;
 			setoverlay();
