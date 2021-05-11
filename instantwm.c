@@ -2189,6 +2189,9 @@ xcommand()
 			arg = commands[i].arg;
 		    }
 		    break;
+        case 4: //string argument
+            arg = ((Arg) { .v = fcursor });
+            break;
 	    }
 	}
 	commands[i].func(&(arg));
@@ -3446,6 +3449,39 @@ void shutkill(const Arg *arg) {
 		killclient(arg);
 }
 
+void
+nametag(const Arg *arg) {
+	char *p;
+	FILE *f;
+	int i;
+
+    char* name = (char*)arg->v;
+
+    if (strlen(name) >= MAX_TAGLEN)
+        return;
+
+	for(i = 0; i < LENGTH(tags); i++) {
+		if(selmon->tagset[selmon->seltags] & (1 << i))
+		{
+			if (strlen(name) > 0)
+				strcpy(tags[i], name);
+			else
+				strcpy(tags[i], tags_default[i]);
+		}
+	}
+	tagwidth = gettagwidth();
+	drawbars();
+}
+
+void
+resetnametag(const Arg *arg)
+{
+	for (int i = 0; i < 21; i++)
+		strcpy((char *)&tags[i], tags_default[i]);
+	tagwidth = gettagwidth();
+	drawbars();
+}
+
 Client *
 nexttiled(Client *c)
 {
@@ -4283,6 +4319,7 @@ setup(void)
 	/* init system tray */
 	updatesystray();
 	/* init bars */
+	verifytagsxres();
 	updatebars();
 	updatestatus();
 	/* supporting window for NetWMCheck */
@@ -4911,6 +4948,7 @@ toggleshowtags(const Arg *arg)
     int showtags = selmon->showtags;
     ctrltoggle(&showtags, arg->ui);
     selmon->showtags = showtags;
+	tagwidth = gettagwidth();
 	drawbar(selmon);
 }
 
@@ -5291,6 +5329,19 @@ unmapnotify(XEvent *e)
 		 * _not_ destroy them. We map those windows back */
 		XMapRaised(dpy, c->win);
 		updatesystray();
+	}
+}
+
+void
+verifytagsxres(void)
+{
+	for (int i = 0; i < 9; i++)
+	{
+		int len = strlen(tags[i]);
+		if (len > MAX_TAGLEN - 1 || len == 0)
+		{
+			strcpy((char *)&tags[i], "Xres err");
+		}
 	}
 }
 
