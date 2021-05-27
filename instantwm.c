@@ -388,7 +388,7 @@ createoverlay() {
 		m->overlaystatus = 0;
 	}
 
-    tempclient->oldbw = tempclient->bw;
+    savebw(tempclient);
 	tempclient->bw = 0;
 	tempclient->islocked = 1;
 	if (!selmon->overlay->isfloating) {
@@ -2329,7 +2329,14 @@ manage(Window w, XWindowAttributes *wa)
 		&& (c->x + (c->w / 2) < c->mon->wx + c->mon->ww)) ? bh : c->mon->my);
 	c->bw = borderpx;
 
-	wc.border_width = c->bw;
+    if (!c->isfloating && &monocle == c->mon->lt[c->mon->sellt]->arrange 
+            && c->w > c->mon->mw - 30 && c->h > (c->mon->mh - 30 - bh)
+            ) {
+        wc.border_width = 0;
+    } else {
+        wc.border_width = c->bw;
+    }
+
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
 	XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
 	configure(c); /* propagates border_width, if size doesn't change */
@@ -5787,6 +5794,12 @@ moveleft(const Arg *arg) {
 void
 animleft(const Arg *arg) {
 
+
+	if (&overviewlayout == selmon->lt[selmon->sellt]->arrange) {
+        directionfocus(&((Arg) { .ui = 3 }));
+        return;
+    }
+
 	Client *tempc;
 
 	// windows like behaviour in floating layout
@@ -5820,6 +5833,11 @@ animright(const Arg *arg) {
 
 	Client *tempc;
 	int tmpcounter = 0;
+
+	if (&overviewlayout == selmon->lt[selmon->sellt]->arrange) {
+        directionfocus(&((Arg) { .ui = 1 }));
+        return;
+    }
 
 	if (selmon->sel && NULL == selmon->lt[selmon->sellt]->arrange) {
           XSetWindowBorder(dpy, selmon->sel->win,
@@ -5883,6 +5901,12 @@ viewtoleft(const Arg *arg) {
 void upkey(const Arg *arg) {
 	if (!selmon->sel)
 		return;
+
+	if (&overviewlayout == selmon->lt[selmon->sellt]->arrange) {
+        directionfocus(&((Arg) { .ui = 0 }));
+        return;
+    }
+
 	if (NULL == selmon->lt[selmon->sellt]->arrange) {
 		Client *c;
 		c = selmon->sel;
@@ -5910,6 +5934,12 @@ int unhideone()
 }
 
 void downkey(const Arg *arg) {
+
+	if (&overviewlayout == selmon->lt[selmon->sellt]->arrange) {
+        directionfocus(&((Arg) { .ui = 2 }));
+        return;
+    }
+
 	if (NULL == selmon->lt[selmon->sellt]->arrange) {
 		if (!selmon->sel)
 			return;
